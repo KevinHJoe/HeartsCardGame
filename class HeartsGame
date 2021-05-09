@@ -1,0 +1,469 @@
+package hearts.card.game;
+
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.Scanner;
+
+public class HeartsGame {
+
+    
+    public static void main(String[] args) {
+
+        Scanner scan = new Scanner(System.in);
+
+        ArrayList<Card> deck = new ArrayList<>();
+        Player[] player = new Player[4];
+
+        createDeck(deck);
+
+        randDeck(deck);
+
+        createHand(deck, player);
+
+        for (int i = 0; i < player.length; i++) {
+            sortHand(player, i);
+
+        }
+
+        play(player);
+
+    }
+
+    public static void play(Player player[]) {
+
+        Scanner scan = new Scanner(System.in);
+
+        Card[] cardsPlayed = new Card[4];
+        cardsPlayed[0] = new Card();
+        cardsPlayed[1] = new Card();
+        cardsPlayed[2] = new Card();
+        cardsPlayed[3] = new Card();
+
+
+        int leadPlayer;
+        
+        System.out.println("\nRound 1");
+
+        
+        System.out.println("Current Cards Played\n"
+                + "********************");
+        leadPlayer = findStartCard(player, cardsPlayed);
+
+
+        //round 1
+        for (int i = 0; i < 4; i++) {
+
+            if ((i + leadPlayer) % 4 != 0 && (i + leadPlayer)%4 != leadPlayer) {
+
+                cardsPlayed[i] = aiMove(player, ((i + leadPlayer) % 4), 0, cardsPlayed);
+
+                System.out.println("player " + ((i + leadPlayer) % 4) + " played " + cardsPlayed[i].getSuit() + " " + cardsPlayed[i].getDescription() + "\n");
+
+            }
+
+
+            if ((i + leadPlayer) % 4 == 0 && leadPlayer != 0) {                                           //0 = you
+
+                System.out.println("\nChoose your card");
+                player[0].displayHand();
+
+                int cardChoice = scan.nextInt() - 1;
+                cardsPlayed[i] = player[0].hand[cardChoice];
+                player[0].hand[cardChoice] = null;
+
+            }
+            
+        }
+
+
+        for (int i = 1; i < 13; i++) {                                                  //rounds 2 - 13
+            leadPlayer = findLeadPlayer(player, (leadPlayer), cardsPlayed);
+            System.out.println("THE LEAD PLAYER IS PLAYER " + leadPlayer);
+            
+            System.out.println("\n\n\n" + "*****Round " + (i + 1) + "*****\n");
+
+            System.out.println("Current Cards Played\n"
+                + "********************");
+            for (int j = 0; j < 4; j++) {
+
+                
+
+                if ((j + leadPlayer) % 4 == 0) {                                           //0 = you
+
+                    System.out.println("\n**Choose your card**");
+
+                    player[0].displayHand();
+                    int cardChoice = scan.nextInt() - 1;
+                    cardsPlayed[j] = player[0].hand[cardChoice];
+                    player[0].hand[cardChoice] = null;
+                }
+
+                if ((j + leadPlayer) % 4 != 0) {                                                //prevents player[0] (you) to be randomly chosen
+
+                    cardsPlayed[j] = aiMove(player, ((j + leadPlayer) % 4), i, cardsPlayed);
+                    System.out.println("Player " + (j + leadPlayer) % 4 + " played " + cardsPlayed[j].getSuit() + " " + cardsPlayed[j].getDescription() + "\n");
+                }
+
+                //calculate the winner of round 13 inside the last loop iteration
+                if (i == 12 && j == 3) {
+                    findLeadPlayer(player, leadPlayer, cardsPlayed);
+                }
+
+            }
+
+        }
+
+        for (int i = 0; i < 4; i++) {
+            System.out.println("player " + (i +leadPlayer)%4  + " has " + player[i].getPoints() + " points");
+        }
+    }
+
+    public static int findStartCard(Player player[], Card cards[]) {
+
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 13; j++) {
+
+                if (player[i].hand[j].getSuit() == Card.Suit.Club && player[i].hand[j].getNumber() == 2) {
+
+                    cards[0] = player[i].hand[j];
+                    player[i].hand[j] = null;
+                    System.out.println("Player " + (i) + " played " + cards[0].getSuit() + " " + cards[0].getDescription() + "\n");
+                    return i;
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    public static int findLeadPlayer(Player player[], int lead, Card cards[]) {
+
+        //lead = leadPlayer
+        //cards[] = cardsPlayed in current round
+        Card temp;
+        boolean check;
+        int count = 0;                                                          //if count == 4 during an iteration of i, that means that card is the highest
+
+        
+
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                check = cards[i].compare(cards[j]);
+
+                if (check) {
+                    
+                    count++;
+                }
+
+                if (count == 3) {
+                   
+                   // System.out.println("\nPlayer " + (i + lead)% 4 + "Has highest with " + cards[i].getSuit() + " " + cards[i].getDescription() + "\n\n\n");
+
+                    points(player, (i + lead) % 4, cards, lead, i);
+
+                    return (i + lead) % 4;
+
+                    // element i is the highest card
+                }
+
+            }
+           
+            count = 0;
+        }
+
+        return lead;
+    }
+
+    public static Card aiMove(Player player[], int lead, int i, Card cardsPlayed[]) {      //FIX ME // PREVENT PLAYER[0] TO BE PLAYED IN THIS METHOD    
+
+       
+        Card card;
+
+        if (lead == 0) {
+            System.out.println("\n\n********* THIS SHOULDN'T EQUAL 0 ********");
+        }
+
+        //finds card for ai with same suit
+        for (int j = 0; j < 13; j++) {
+
+            if (player[lead].hand[j] != null) {
+                if (cardsPlayed[0].getSuit() == player[lead].hand[j].getSuit()) {
+
+                    card = player[lead].hand[j];
+                    player[lead].hand[j] = null;
+                    return card;
+
+                }
+            }
+
+        }
+
+       
+
+        for (int c = 0; c < 13; c++) {
+            if (player[lead].hand[c] != null) {
+                card = player[lead].hand[c];
+                player[lead].hand[c] = null;
+                return card;
+            }
+        }
+
+       
+      
+        System.out.println("THIS SHOULD NEVER PRINT");
+        return null;
+    }
+
+    public static boolean checkRandNum(int num[], int randNum, int round) {
+        //prevents duplicates 
+
+        for (int i = 0; i < 13; i++) {
+            if (randNum == num[i] && i != round) {
+                return true;
+            }
+        }
+
+        System.out.println("THIS WILL RETURN FALSE");
+        return false;
+    }
+
+    
+    
+    
+    
+    
+    public static void points(Player player[], int loser, Card cards[], int lead, int highCard) {
+
+        for (int j = 0; j < 4; j++) {
+            System.out.print("Player " + (j + lead) % 4 + ": ");
+            System.out.println(cards[j].getSuit() + " " + cards[j].getDescription());
+
+        }
+
+        System.out.println();
+
+        int points = 0;
+
+        for (int j = 0; j < 4; j++) {
+            if (cards[j].getSuit() == Card.Suit.Heart) {                                      //heart points
+                points++;
+
+            }
+
+            if (cards[j].getSuit() == Card.Suit.Spade && cards[j].getNumber() == 12) {        //quean of spades
+                points += 13;
+
+            }
+        }
+
+        System.out.println("Player " + loser + " gains: " + points + " by playing " + cards[highCard].getSuit() + " " + cards[highCard].getDescription());
+        player[loser].setPoints(points);
+        
+        System.out.println("\nCurrent score:");
+        for (int j = 0; j < 4; j++) {
+            System.out.println("Player " + (j + lead) % 4 + ":  " + player[j].getPoints());
+        }
+
+
+        System.out.println("\n");
+
+    }
+
+    public static void createDeck(ArrayList<Card> deck) {
+        for (int i = 0; i < 52; i++) {
+            deck.add(new Card());
+
+            if (i < 13) {
+                deck.get(i).setSuit(Card.Suit.Club);
+                deck.get(i).setNumber(i + 1);
+                deck.get(i).setDescription();
+
+            }
+
+            if (i < 26 && i > 12) {
+                deck.get(i).setSuit(Card.Suit.Heart);
+                deck.get(i).setNumber(i - 12);
+                deck.get(i).setDescription();
+
+            }
+            if (i < 40 && i > 25) {
+                deck.get(i).setSuit(Card.Suit.Diamond);
+                deck.get(i).setNumber(i - 25);
+                deck.get(i).setDescription();
+
+            }
+            if (i > 38) {
+                deck.get(i).setSuit(Card.Suit.Spade);
+                deck.get(i).setNumber(i - 38);
+                deck.get(i).setDescription();
+
+            }
+
+        }
+    }
+
+    public static void randDeck(ArrayList<Card> deck) {
+        Random rand = new Random();
+
+        int k = deck.size() - 1;
+        Card temp;
+
+        for (int i = 0; i < k; i++) {
+
+            int num1 = rand.nextInt(51);
+            int num2 = rand.nextInt(51);
+
+            temp = deck.get(num1);
+
+            deck.set(num1, deck.get(num2));
+            deck.set(num2, temp);
+        }
+
+    }
+
+    public static void sortDeck(ArrayList<Card> deck) {
+
+        Card temp;
+        boolean check;
+
+        for (int i = 0; i < 52; i++) {
+            for (int j = i; j < 52; j++) {
+
+                check = deck.get(i).compare(deck.get(j));
+
+                if (check == true) {
+
+                    temp = deck.get(i);
+                    deck.set(i, deck.get(j));
+                    deck.set(j, temp);
+
+                }
+
+            }
+
+        }
+
+    }
+
+    public static void sortHand(Player player[], int p) {
+
+        Card temp;
+        boolean check;
+
+        for (int i = 0; i < player[0].hand.length; i++) {
+            for (int j = i; j < player[0].hand.length; j++) {
+
+                check = player[p].hand[i].compare(player[p].hand[j]);
+
+                if (check == true) {
+
+                    temp = player[p].hand[i];
+                    player[p].hand[i] = player[p].hand[j];
+                    player[p].hand[j] = temp;
+
+                }
+
+            }
+
+        }
+
+    }
+
+    public static void displayDeck(ArrayList<Card> deck) {
+
+        for (int i = 0; i < 13; i++) {
+
+            if (deck.get(i).hands != null) {
+                System.out.printf("%5s %-10s", deck.get(i).getSuit(), deck.get(i).getDescription());
+                System.out.printf("%5s %-10s", deck.get(i + 13).getSuit(), deck.get(i + 13).getDescription());
+                System.out.printf("%5s %-10s", deck.get(i + 26).getSuit(), deck.get(i + 26).getDescription());
+                System.out.printf("%5s %-10s", deck.get(i + 39).getSuit(), deck.get(i + 39).getDescription());
+                System.out.println();
+            } else {
+                System.out.println("");
+            }
+
+        }
+    }
+
+    public static void createHand(ArrayList<Card> deck, Player player[]) {
+
+        player[0] = new Player();
+        player[1] = new Player();
+        player[2] = new Player();
+        player[3] = new Player();
+
+        for (int i = 0; i < 52; i++) {
+
+            if (i < 13) {
+
+                player[0].addCard(deck.get(i));
+                //player[0].hand[i] = deck.get(i);
+                //System.out.println(player[0].hand[i].getDescription() + " " + player[0].hand[i].getSuit());
+            }
+            if (i > 12 && i < 26) {
+
+                player[1].hand[i - 13] = deck.get(i);
+            }
+            if (i > 25 && i < 39) {
+                player[2].hand[i - 26] = deck.get(i);
+            }
+            if (i > 38) {
+                player[3].hand[i - 39] = deck.get(i);
+            }
+        }
+
+    }
+
+}
+
+//random Robot move
+/*
+
+        while (check) {
+
+            System.out.println("@@@@@@@@@  THIS IS TO CHECK IS THE BOOLEAN CHECK NEEDS TO BE FALSE OR TRUE FIRST@@@@@@@@@\n" + check);
+            
+            //randNum = rand.nextInt(13);
+
+            
+            //make sure ai always play's same suit if they can
+            
+            
+            
+            /*
+            int hg = 1;
+
+            if (hg == 1) {//if rand card == suit of first card check == false; else continue;
+                System.out.println("it happened");
+                //continue;
+            }
+            System.out.println("does this still happen??????????????????????00");
+
+            
+            
+            
+            
+            
+
+            player[lead].checkRandNum[i] = randNum;                                  //******** NEEDS A FOR LOOP********
+
+            System.out.println("sending randNum = " + randNum);
+
+            for(int r = 0; r < 13; r++){
+                System.out.println(player[lead].checkRandNum[r]);
+            }
+            check = checkRandNum(player[lead].checkRandNum, randNum, i);
+            
+            
+            
+            if(check == false){
+                System.out.println("\n\n\ndoes this happen??????????????????????????????????????");
+                card = player[lead].hand[randNum];
+                player[lead].hand[randNum] = null;
+                
+                return card;
+            }
+
+        }
+ */
