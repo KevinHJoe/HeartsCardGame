@@ -1,0 +1,111 @@
+
+package hearts.card.game;
+
+
+public class Card {
+    
+        public enum Suit {
+        Club, Diamond, Heart, Spade
+    };
+
+    private int number;
+    private Suit suit;
+    private String description;
+        public Card[] hands = new Card[13];
+
+
+    public Card() {
+        suit = Suit.Club;
+        description = "Joker";
+
+    }
+
+    public void setNumber(int n) {
+        number = n;
+    }
+
+    public int getNumber() {
+
+        return number;
+    }
+
+    public void setSuit(Suit s) {
+
+        suit = s;
+    }
+
+    public Suit getSuit() {
+
+        return suit;
+    }
+
+    public void setDescription() {
+
+        if (number > 1 && number < 11) {
+
+            description = Integer.toString(number);
+        }
+        if (number == 11) {
+            description = "Jack";
+        }
+        if (number == 12) {
+            description = "Queen";
+        }
+        if (number == 13) {
+            description = "King";
+        }
+        if (number == 1) {
+            description = "Ace";
+        }
+       
+    }
+
+    public String getDescription() {
+
+        return description;
+    }
+
+
+    public Boolean compare(Card card) {
+
+        int suit1 = getEnumValue(card);      //this is j
+        int suit2 = getEnumValue(this);      //this is i    
+
+
+        if(suit1 <= suit2 && card.getNumber() == 1){
+
+            return true;
+        }
+        
+        if (suit1 <= suit2 && card.getNumber() < this.getNumber()) {
+            return true;
+        }
+      
+        
+        if(suit1 < suit2){
+            return true;
+        }
+        
+        
+        return false;
+    }
+    
+    private int getEnumValue(Card card) {
+        int k = 0;
+        
+        if (card.getSuit() == Suit.Club) {
+            k = 1;
+        }
+        if (card.getSuit() == Suit.Diamond) {
+            k = 2;
+        }
+        if (card.getSuit() == Suit.Heart) {
+            k = 3;
+        }
+        if (card.getSuit() == Suit.Spade) {
+            k = 4;
+        }
+
+        return k;
+    }
+}
